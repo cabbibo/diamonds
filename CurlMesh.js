@@ -105,14 +105,14 @@ function CurlMesh( title , mesh , extraParams ){
 
   guis.appendChild( gHolder );
 
-  $(tHolder).click(function(){
+ /* $(tHolder).click(function(){
     this.toggle();
     if( this.active ){
       this.tHolder.className = "active";
     }else{
       this.tHolder.className = "";
     }
-  }.bind( gem ));
+  }.bind( gem ));*/
 
 
   $(tHolder).hover(function(){
