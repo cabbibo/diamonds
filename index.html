@@ -1,0 +1,709 @@
+<html>
+
+<head>
+
+  <link rel="stylesheet" type="text/css" href="main.css">
+
+  <meta name="twitter:card" content="photo">
+  <meta name="twitter:site" content="@cabbibo">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:url" content="http://cabbi.bo">
+  <meta name="twitter:title" content="Long Live Synesthesia">
+  <meta name="twitter:description" content="Long Live Synesthesia">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:image" content="http://cabbi.bo/image.png">
+  <meta name="twitter:image:width" content="1440">
+  <meta name="twitter:image:height" content="900">
+  <meta name="twitter:domain" content="cabbi.bo">
+  <meta itemprop="name" content="Cabbi.bo">
+  <meta itemprop="description" content="Long Live Synesthesia">
+  <meta itemprop="image" src="http://cabbi.bo/image.png">
+  <meta property="og:title" content="Cabbi.bo">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="http://cabbi.bo/image.png"/>
+  <meta property="og:site_name" content="Cabbi.bo">
+  <meta property="og:description" content="Long Live Synesthesia">
+
+  <style>
+
+    @font-face {
+      font-family: "GeoSans";
+      src: url("lib/GeosansLight.ttf");
+    }
+    html{ color:#fff; background:#000; font-family:"GeoSans"; font-size:20px; overflow:hidden }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : -35px;
+
+      left      : 0px;
+      z-index   : 999;
+      opacity: .1;
+    }
+
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+    }
+
+    #loading{
+
+      width:100%;
+      text-align:center;
+      padding-top:100px;
+      font-size:25px;
+
+    }
+    
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+      bottom:5px;
+      right:10px;
+      text-decoration:none;
+      //underline:none;
+      opacity:.5;
+      font-size: 20px;
+    }
+
+    a:hover{
+
+      text-decoration:underline;
+      opacity:1;
+
+    }
+
+    h1{
+      background: #000;
+      color: #fff;
+      margin: 0px;
+      padding: 5px;
+      font-size:25px;
+      border-bottom:1px solid white;
+    }
+
+    h1:hover{
+
+      background:#777;
+
+    }
+
+    .active{
+      background:#7ca;
+    }
+
+    .close-button{
+  
+      display:none;
+
+    }
+
+    #GUI{
+
+      position:fixed;
+      right:0px;
+      top:0px;
+      z-index:999;
+
+    }
+    
+    </style>
+</head>
+<body>
+
+  <div id="GUI">
+  </div>
+
+  <div id="description">
+
+    <a href="https://soundcloud.com/kompakt/weval-gimme-some" target="_blank">Weval - Gimme Some</a>
+
+  </div>
+
+  
+<script src = "lib/underscore.js"           ></script>
+<script src = "lib/three.js"                ></script>
+<script src = "lib/jquery.min.js"           ></script>
+<script src = "lib/stats.min.js"            ></script>
+<script src = "lib/TrackballControls.js"    ></script>
+<script src = "lib/ShaderLoader.js"         ></script>
+<script src = "lib/UserAudio.js"            ></script>
+<script src = "lib/Stream.js"               ></script>
+<script src = "lib/AudioController.js"      ></script>
+<script src = "lib/AudioTexture.js"         ></script>
+<script src = "lib/PhysicsRenderer.js"      ></script>
+<script src = "lib/ParticleUtils.js"        ></script>
+<script src = "lib/dat.gui.min.js"          ></script>
+<script src = "lib/OBJLoader.js"            ></script>
+<script src = "lib/Loader.js"               ></script>
+<script src = "lib/SubdivisionModifier.js"  ></script>
+
+<script src="fonts/helvetiker_bold.typeface.js"></script>
+<script src="fonts/helvetiker_regular.typeface.js"></script>
+
+
+<script src = "GEM.js"                      ></script>
+<script src = "GUI.js"                      ></script>
+
+
+<script src = "Arrangements.js"             ></script>
+
+
+<script src = "Text.js"                     ></script>
+<script src = "CurlMesh.js"                 ></script>
+<script src = "N2.js"                 ></script>
+
+<script>
+
+  var container , camera, scene, renderer , stats;
+
+  var gem , gui;
+
+  var tv1 = new THREE.Vector3();
+  var tv2 = new THREE.Vector3();
+  var repelerMeshes = [];
+  var repelersHidden = true;
+
+  var cubeMapRendered = false;
+
+
+  var cubeMapSpheres = [];
+  var REPELERS = [];
+
+
+
+  // TODO: make into loader
+  var loaded = 0;
+  var neededToLoad = 2;
+
+
+  var loader = new Loader();
+  loader.liftCurtain();
+
+  var clock = new THREE.Clock();
+
+  var audioController = new AudioController();
+  /*audioController.mute.gain.value = 0;
+  //var stream = new Stream(  'audio/huldra.mp3',audioController  );
+  
+  var userAudio = new UserAudio( audioController );
+  userAudio.onStreamCreated = function(){
+
+    console.log('asds');
+    onLoad();
+
+  }*/
+
+  
+  var audio = new Audio(),
+  // `stream_url` you'd get from 
+  // requesting http://api.soundcloud.com/tracks/6981096.json
+  url = 'http://api.soundcloud.com/tracks/169306457/stream' +
+        '?client_id=2400df97862fa2c06f486af524e4f974';
+
+  audio.src = url;
+
+  var source = audioController.ctx.createMediaElementSource(audio);
+  source.connect(audioController.gain);
+  source.mediaElement.play();
+
+
+  var shaders = new ShaderLoader('shaders');
+
+  //shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+  shaders.load( 'ss-weird1' , 'weird1' , 'simulation' );
+  //shaders.load( 'ss-n2' , 'n2' , 'simulation' );
+  
+  /*shaders.load( 'vs-fire' , 'fire' , 'vertex' );
+  shaders.load( 'fs-weird1' , 'weird1' , 'fragment' );
+  shaders.load( 'fs-fire' , 'fire' , 'fragment' );
+  
+  
+  shaders.load( 'fs-normal' , 'normal' , 'fragment' );*/
+  
+  
+  shaders.load( 'vs-cube' , 'cube' , 'vertex' );
+  shaders.load( 'fs-cube' , 'cube' , 'fragment' );
+  shaders.load( 'vs-crystal' , 'crystal' , 'vertex' );
+  shaders.load( 'fs-crystal' , 'crystal' , 'fragment' );
+
+  shaders.shaderSetLoaded = function(){
+   onLoad();
+  }
+
+
+  var modifier = new THREE.SubdivisionModifier( 2 );
+  var loadedMeshes = {}
+  
+  var objLoader  = new THREE.OBJLoader();
+  
+ /* objLoader.load( 'models/hand.obj' , function( obj ){
+
+    loadedMeshes['hand'] = obj.children[0];
+
+    loadedMeshes['hand'].scale.multiplyScalar( 200 );
+    loadedMeshes['hand'].position.z = -400;
+    loadedMeshes['hand'].updateMatrix();
+
+    var smooth = loadedMeshes['hand'].geometry;
+    smooth.mergeVertices();
+    smooth.computeFaceNormals();
+    smooth.computeVertexNormals();
+
+    modifier.modify( smooth );
+
+    onLoad();
+
+  });*/
+
+  objLoader.load( 'models/skull1.obj' , function( obj ){
+
+    loadedMeshes['skull1'] = obj.children[0];
+
+    loadedMeshes['skull1'].scale.multiplyScalar( 2 );
+    loadedMeshes['skull1'].position.z = -200;
+    loadedMeshes['skull1'].position.y = -400;
+    loadedMeshes['skull1'].position.x = -70;
+    loadedMeshes['skull1'].updateMatrix();
+
+    var smooth = loadedMeshes['skull1'].geometry;
+    
+    smooth.mergeVertices();
+    smooth.computeFaceNormals();
+    smooth.computeVertexNormals();
+
+    modifier.modify( smooth );
+
+    onLoad();
+
+  });
+
+
+  /* objLoader.load( 'models/logo.obj' , function( obj ){
+
+    loadedMeshes['logo'] = obj.children[0];
+
+    loadedMeshes['logo'].scale.multiplyScalar( 50 );
+    //loadedMeshes['logo'].position.z = -200;
+    //loadedMeshes['logo'].position.y = -400;
+    loadedMeshes['logo'].updateMatrix();
+
+    var smooth = loadedMeshes['logo'].geometry;
+    
+    smooth.mergeVertices();
+    smooth.computeFaceNormals();
+    smooth.computeVertexNormals();
+
+    modifier.modify( smooth );
+
+    onLoad();
+
+  });
+
+   objLoader.load( 'models/bieb.obj' , function( obj ){
+
+    loadedMeshes['bieb'] = obj.children[0];
+
+    loadedMeshes['bieb'].scale.multiplyScalar( 50 );
+    //loadedMeshes['bieb'].position.z = -200;
+    //loadedMeshes['bieb'].position.y = -400;
+    loadedMeshes['bieb'].updateMatrix();
+
+    var smooth = loadedMeshes['bieb'].geometry;
+    
+    smooth.mergeVertices();
+    smooth.computeFaceNormals();
+    smooth.computeVertexNormals();
+
+    modifier.modify( smooth );
+
+    onLoad();
+
+  });*/
+
+
+
+  var G_UNIFORMS = {
+
+    dT      : { type:"f" , value:0                            },
+    time    : { type:"f" , value:0                            },
+    t_audio : { type:"t" , value: audioController.texture     },
+
+  }
+
+
+
+
+
+ function init(){
+
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      10,
+      10000
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = 2000 ;
+    camera.lookAt( new THREE.Vector3() );
+
+    cubeCamera = new THREE.CubeCamera( 20, 100000, 1024 );
+    cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+    scene.add( cubeCamera );
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer({ alpha: true });
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+    renderer.domElement.style.background="#000";
+    
+    controls = new THREE.TrackballControls( camera , renderer.domElement);
+
+    controls.minDistance = 1;
+    controls.maxDistance = 2500;
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+    window.addEventListener( 'mousemove', onMouseMove , false );
+   
+  
+
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+  
+  
+    var g = new THREE.IcosahedronGeometry( 1 , 1 );
+    var m = new THREE.MeshNormalMaterial();
+
+    for( var i =0; i<25; i++ ){
+
+      var mesh = new THREE.Mesh( g , m );
+
+      var t = Math.random() * 2 * Math.PI;
+      var p = Math.random() * 2 * Math.PI;
+
+      mesh.target   = new THREE.Vector3();//toCart( 12 , t , p );
+      mesh.velocity = new THREE.Vector3();
+      mesh.power    = new THREE.Vector3();
+
+      //mesh.position.copy( mesh.target );
+      REPELERS.push( mesh );
+
+      //scene.add( mesh );
+
+    }
+
+   // Arrangements.plane( 20 , 'z' , -20 );
+    Arrangements.randomSphere();
+
+
+    var path = "img/cubemap/skybox/";
+    var format = '.jpg';
+    var urls = [
+        path + 'px' + format, path + 'nx' + format,
+        path + 'py' + format, path + 'ny' + format,
+        path + 'pz' + format, path + 'nz' + format
+    ];
+
+    cubeCamera = new THREE.CubeCamera( 10, 10000, 256 ); // parameters: near, far, resolution
+    cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter; // mipmap filter
+    cubeCamera.position.set( 0, 0, 0 );
+    scene.add( cubeCamera );
+
+    var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
+    reflectionCube.format = THREE.RGBFormat;
+
+    var refractionCube = new THREE.CubeTexture( reflectionCube.image, new THREE.CubeRefractionMapping() );
+    refractionCube.format = THREE.RGBFormat;
+
+    var shader = THREE.ShaderLib[ "cube" ];
+    shader.uniforms[ "tCube" ].value = reflectionCube;
+
+    var material = new THREE.ShaderMaterial( {
+
+        fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader,
+        uniforms: shader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide
+
+    } ),
+
+    mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
+    //scene.add( mesh );
+    /*var t = new Text('VEERTJE', 3 );
+    t.scale.multiplyScalar( 1 );
+    t.updateMatrix();
+    
+    gem = new CurlMesh('text' , t , {
+
+      soul:{
+
+        noiseSize: { type:"f" , value: .1 , constraints:[.01 , 1.] },
+        returnPower:        { type:"f" , value: .8  , constraints:[ .0 ,1. ] },
+        noisePower:         { type:"f" , value: 1   , constraints:[0 , 10.] },
+
+      }
+      
+    });*/
+
+     var g = new THREE.Mesh( new THREE.CubeGeometry( 3 , 3 , 3 , 20 , 20 , 20 ) );
+    //var g = new THREE.Mesh( new THREE.IcosahedronGeometry( 3 , 4 ) );
+    gem = new CurlMesh( 'skull' , loadedMeshes.skull1 , {
+      
+      vs: shaders.vertexShaders.cube,
+      fs: shaders.fragmentShaders.cube,
+  
+      soul:{
+
+        noiseSize:    { type:"f" , value:.001 , constraints:[ .00001 , .01 ]},
+        noisePower:   { type:"f" , value: 100   , constraints:[ 0 , 300.] },
+        returnPower:  { type:"f" , value: 1.   , constraints:[ .0 ,2. ] }, 
+
+      },
+
+      body:{
+        t_refl:{type:"t" , value:cubeCamera.renderTarget },
+        t_refr:{type:"t" , value:cubeCamera.renderTarget },
+        custom1:{type:"f" , value:.9 , constraints:[ .8 , 1 ]},
+        custom2:{type:"f" , value:.5 , constraints:[ 0 , 1 ]},
+        custom3:{type:"f" , value:3 , constraints:[ 0 , 5 ]},
+        audioDisplacement:{ type:"f" , value : 0.0 ,  constraints:[ 0 , 200 ]},
+        
+      }
+
+    }); 
+
+    gem.soul.reset( gem.t_og.value );
+    gem.toggle();
+
+    //gem.body.material.blending = THREE.AdditiveBlending;
+    //gem.body.material.transparent = true;
+    //gem.body.material.depthWrite = false;
+
+    //gem.body.materialNeedsUpdate = true;
+
+
+      var g = new THREE.TetrahedronGeometry( 100 , 1 );
+      var m = new THREE.ShaderMaterial({
+
+        uniforms:{
+          t_audio:G_UNIFORMS.t_audio,
+          camPos:{type:"v3" , value:camera.position}
+        },
+        vertexShader:shaders.vertexShaders.crystal,
+        fragmentShader:shaders.fragmentShaders.crystal,
+
+        transparent:true,
+        //blending:THREE.AdditiveBlending,
+        depthWrite:false,
+        shading: THREE.FlatShading
+      });
+
+    var geo = new THREE.Geometry();
+    for( var i =0; i < 1000; i++ ){
+
+      var me = new THREE.Mesh( g);
+
+      var x = Math.random() < .5 ? 1 : -1;
+      var y = Math.random() < .5 ? 1 : -1;
+      var z = Math.random() < .5 ? 1 : -1;
+      me.position.x = (x + (Math.random() - .5 ))* 1000;
+      me.position.y = (y + (Math.random() - .5 ))* 1000;
+      me.position.z = (z + (Math.random() - .5 ))* 1000;
+      
+      me.rotation.x = Math.random();
+      me.rotation.y = Math.random();
+      me.rotation.z = Math.random();
+      me.scale.multiplyScalar( Math.random() *Math.random() * Math.random() * 3. + .5 )
+
+
+      me.updateMatrix();
+
+
+      var t = Math.random() * 2 * Math.PI;
+      var p = Math.random() * 2 * Math.PI;
+      me.position.copy( toCart( 3000 , t , p ) );
+
+      //cubeMapSpheres.push( me );
+
+      me.updateMatrix();
+
+      geo.merge( g , me.matrix );
+
+     // scene.add( me );
+    }
+
+    geo.computeFaceNormals();
+    geo.computeVertexNormals();
+    var mesh = new THREE.Mesh( geo , m );
+
+    scene.add( mesh );
+
+
+  }
+
+
+  function animate(){
+
+
+
+    audioController.update();
+
+    G_UNIFORMS.dT.value = clock.getDelta();
+    G_UNIFORMS.time.value += G_UNIFORMS.dT.value;
+
+    gem.update();
+    //gem1.update();
+
+   /* gem.soul.debugScene.position.copy( camera.position );
+
+    tv1.set( 0 , 0, -30 );
+    tv1.applyQuaternion( camera.quaternion );
+    gem.soul.debugScene.position.add( tv1 );
+    gem.soul.debugScene.lookAt( camera.position );*/
+
+
+    stats.update();
+
+    controls.update();
+
+    for( var i = 0; i < REPELERS.length; i++ ){
+
+      //console.log( REPELERS[i].target );
+      tv1.copy( REPELERS[i].target );
+      tv1.sub( REPELERS[i].position );
+
+      tv1.multiplyScalar( .1 );
+
+      //console.log( tv1.x );
+      REPELERS[i].position.add( tv1 );
+       
+      var ind = i / (2 * REPELERS.length); 
+      var fI = Math.floor( ind * audioController.analyzer.array.length );
+      var p = audioController.analyzer.array[ fI ];
+
+      //console.log( p );
+      REPELERS[i].power.x = p / 256;
+      
+    }
+
+
+   if( !cubeMapRendered ){
+
+      gem.body.visible = false; // *cough*
+
+      cubeCamera.updateCubeMap( renderer, scene );
+
+      gem.body.visible = true;
+      //  var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
+      //reflectionCube.format = THREE.RGBFormat;
+
+  
+     // cubeMapRendered = true;
+
+     /* for( var i = 0; i < cubeMapSpheres.length; i++ ){
+
+        scene.remove( cubeMapSpheres[i] );
+
+
+      }*/
+
+    }
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+
+  function onMouseMove(e ){
+
+ 
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+   
+    var dpr = devicePixelRatio || 1;
+
+    //camUniforms.SS.value.x = window.innerWidth * dpr;
+    //camUniforms.SS.value.y = window.innerHeight * dpr;
+
+
+  }
+
+
+  function onLoad(){
+
+
+    loaded ++;
+
+    console.log(loaded );
+    if( loaded === neededToLoad ){
+
+      init();
+      animate();
+      
+   
+      /*if( stream ){
+      
+        stream.play();
+
+      }*/
+
+    }
+
+  }
+
+  function toCart( r , t , p ){
+
+    var x = r *(Math.sin(t))*(Math.cos(p));
+    var y = r *(Math.sin(t))*(Math.sin(p));
+    var z = r * (Math.cos(t));
+
+    return new THREE.Vector3(x,y,z);
+
+  }
+
+
+</script>
+
+
+</body>
+</html>
