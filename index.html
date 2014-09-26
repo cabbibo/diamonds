@@ -216,7 +216,6 @@
 
   var source = audioController.ctx.createMediaElementSource(audio);
   source.connect(audioController.gain);
-  source.mediaElement.play();
 
 
   var shaders = new ShaderLoader('shaders');
@@ -568,6 +567,7 @@
 
     scene.add( mesh );
 
+  source.mediaElement.play();
 
   }
 
